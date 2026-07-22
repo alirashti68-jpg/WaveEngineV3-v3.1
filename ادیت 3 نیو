@@ -64,30 +64,7 @@ var int confirmedHighBar = na
 var float confirmedLow = na
 var int confirmedLowBar = na
 
-//====================================================
-// MARKET STRUCTURE ENGINE
-//====================================================
 
-const int TREND_BULLISH = 1
-const int TREND_BEARISH = -1
-
-
-var int marketTrend = TREND_BULLISH
-
-
-// آخرین نقاط ساختاری
-
-var float structureHigh = na
-var int structureHighBar = na
-
-
-var float structureLow = na
-var int structureLowBar = na
-
-
-// جلوگیری از تکرار CHoCH
-
-var bool structureChanged = false
 //====================================================
 // WAVE START
 //====================================================
@@ -260,57 +237,7 @@ if state == STATE_DOWN
                  textcolor = color.white)
 
 
-//====================================================
-// UPDATE MARKET STRUCTURE
-//====================================================
 
-// ذخیره آخرین High تایید شده
-
-if not na(confirmedHigh)
-
-    structureHigh := confirmedHigh
-    structureHighBar := confirmedHighBar
-
-
-
-// ذخیره آخرین Low تایید شده
-
-if not na(confirmedLow)
-
-    structureLow := confirmedLow
-    structureLowBar := confirmedLowBar
-
-
-
-//====================================================
-// BEARISH CHoCH
-// تغییر ساختار از صعودی به نزولی
-//====================================================
-
-bearishCHoCH =
-
-     marketTrend == TREND_BULLISH and
-     not na(structureLow) and
-     close < structureLow and
-     not structureChanged
-
-
-
-if bearishCHoCH
-
-
-    label.new(
-         bar_index,
-         high,
-         "CHoCH ↓",
-         style = label.style_label_down,
-         color = color.red,
-         textcolor = color.white)
-
-
-    marketTrend := TREND_BEARISH
-
-    structureChanged := true
 //====================================================
 // CANDIDATE DISPLAY (ONLY LAST ONE)
 //====================================================
@@ -355,6 +282,183 @@ if showCandidates
              color = color.aqua,
              textcolor = color.aqua,
              size = size.tiny)
+//====================================================
+// MARKET STRUCTURE / CHoCH ENGINE
+//====================================================
+
+
+//====================================================
+// MARKET TREND
+//====================================================
+
+const int TREND_BULLISH = 1
+const int TREND_BEARISH = -1
+
+var int marketTrend = TREND_BULLISH
+
+
+
+//====================================================
+// STRUCTURE REFERENCES
+//====================================================
+
+var float structureHigh = na
+var float structureLow = na
+
+
+
+//====================================================
+// FAILURE FLAGS
+//====================================================
+
+var bool highFailed = false
+var bool lowFailed = false
+
+
+
+//====================================================
+// UPDATE STRUCTURE HIGH
+//====================================================
+
+if not na(confirmedHigh)
+
+    structureHigh := confirmedHigh
+
+
+
+//====================================================
+// UPDATE STRUCTURE LOW
+//====================================================
+
+if not na(confirmedLow)
+
+    structureLow := confirmedLow
+
+
+
+//====================================================
+// BULLISH TREND
+//====================================================
+
+if marketTrend == TREND_BULLISH
+
+
+    // قیمت به H قبلی رسیده یا از آن عبور کرده
+    // بنابراین شکست L بعدی CHoCH معتبر نیست
+
+    if not na(structureHigh)
+
+        if high >= structureHigh
+
+            highFailed := false
+
+
+
+    // قیمت نتوانسته H قبلی را بشکند
+
+    if not na(structureHigh)
+
+        if high < structureHigh
+
+            highFailed := true
+
+
+
+    //================================================
+    // BEARISH CHoCH
+    //================================================
+
+    bearishCHoCH =
+         highFailed and
+         not na(structureLow) and
+         close < structureLow
+
+
+
+    if bearishCHoCH
+
+
+        label.new(
+             bar_index,
+             high,
+             "CHoCH ↓",
+             style = label.style_label_down,
+             color = color.red,
+             textcolor = color.white)
+
+
+        // تغییر روند
+
+        marketTrend := TREND_BEARISH
+
+
+        // ریست وضعیت قبلی
+
+        highFailed := false
+        lowFailed := false
+
+
+
+//====================================================
+// BEARISH TREND
+//====================================================
+
+if marketTrend == TREND_BEARISH
+
+
+    // قیمت به L قبلی رسیده یا از آن عبور کرده
+    // بنابراین شکست H بعدی CHoCH معتبر نیست
+
+    if not na(structureLow)
+
+        if low <= structureLow
+
+            lowFailed := false
+
+
+
+    // قیمت نتوانسته L قبلی را بشکند
+
+    if not na(structureLow)
+
+        if low > structureLow
+
+            lowFailed := true
+
+
+
+    //================================================
+    // BULLISH CHoCH
+    //================================================
+
+    bullishCHoCH =
+         lowFailed and
+         not na(structureHigh) and
+         close > structureHigh
+
+
+
+    if bullishCHoCH
+
+
+        label.new(
+             bar_index,
+             low,
+             "CHoCH ↑",
+             style = label.style_label_up,
+             color = color.green,
+             textcolor = color.white)
+
+
+        // تغییر روند
+
+        marketTrend := TREND_BULLISH
+
+
+        // ریست وضعیت قبلی
+
+        highFailed := false
+        lowFailed := false
 //====================================================
 // FIBONACCI ON LAST COMPLETED WAVE
 //====================================================
