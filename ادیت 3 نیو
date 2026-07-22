@@ -475,11 +475,22 @@ if marketTrend == TREND_BEARISH
 // DEBUG STRUCTURE REFERENCES
 //====================================================
 
-// آخرین Structure High مورد استفاده CHoCH
+var label debugHighLabel = na
+var label debugLowLabel = na
+
+
+//====================================================
+// SHOW CURRENT STRUCTURE HIGH
+//====================================================
 
 if not na(structureHigh)
 
-    label.new(
+    if not na(debugHighLabel)
+
+        label.delete(debugHighLabel)
+
+
+    debugHighLabel := label.new(
          structureHighBar,
          structureHigh,
          "SH",
@@ -490,11 +501,18 @@ if not na(structureHigh)
 
 
 
-// آخرین Structure Low مورد استفاده CHoCH
+//====================================================
+// SHOW CURRENT STRUCTURE LOW
+//====================================================
 
 if not na(structureLow)
 
-    label.new(
+    if not na(debugLowLabel)
+
+        label.delete(debugLowLabel)
+
+
+    debugLowLabel := label.new(
          structureLowBar,
          structureLow,
          "SL",
